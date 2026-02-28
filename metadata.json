@@ -1,0 +1,5 @@
+{
+  "name": "佳樂最終版",
+  "description": "Python based desktop application using CustomTkinter and SQLite for zero-latency clinic management.",
+  "requestFramePermissions": []
+}

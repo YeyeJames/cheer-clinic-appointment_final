@@ -1,0 +1,1 @@
+// All code has been moved to index.html to support local file execution without a server.
