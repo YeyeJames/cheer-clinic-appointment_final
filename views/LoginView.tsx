@@ -17,8 +17,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLogin }) => {
     e.preventDefault();
     setError('');
 
+    // 防呆處理：自動刪除空格並轉為小寫
+    const inputUser = username.trim().toLowerCase();
+    const inputPass = password.trim();
+
     // 1. 優先判斷唯一管理者 chin / 520
-    if (username === 'chin' && password === '520') {
+    if (inputUser === 'chin' && inputPass === '520') {
       onLogin({
         id: 'admin-001',
         name: '管理員 chin',
@@ -29,8 +33,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLogin }) => {
       return;
     }
 
-    // 2. 比對從資料庫/Settings 建立的一般帳號
-    const user = users.find(u => u.username === username && u.password === password);
+    // 2. 比對一般帳號
+    const user = users.find(u => 
+      u.username.toLowerCase() === inputUser && u.password === inputPass
+    );
     
     if (user) {
       onLogin(user);
@@ -38,6 +44,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLogin }) => {
       setError('帳號或密碼錯誤');
     }
   };
+
 
   return (
     <div className="h-screen w-screen bg-[#fffef9] flex items-center justify-center p-4 md:p-8 relative overflow-hidden fixed inset-0 z-[100]">
