@@ -1,7 +1,9 @@
-
-export type ViewState = 'schedule' | 'patients' | 'settings' | 'reports';
+export type ViewState = 'schedule' | 'settings' | 'reports';
 
 export type Category = '心理' | '職能' | 'rTMS';
+
+// 使用者身分定義：管理者、櫃檯人員、治療師
+export type UserRole = 'admin' | 'counter' | 'therapist';
 
 export interface Therapist {
   id: string;
@@ -43,6 +45,6 @@ export interface User {
   id: string;
   username: string;
   password: string;
-  name: string;
-  role: 'admin' | 'staff';
+  name: string;      // 顯示於介面上的名稱（如：王小明）
+  role: UserRole;    // 詳細的權限分類
 }
