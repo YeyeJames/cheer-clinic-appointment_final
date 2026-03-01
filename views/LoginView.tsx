@@ -17,12 +17,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLogin }) => {
     e.preventDefault();
     setError('');
 
-    // 防呆處理：自動刪除空格並轉為小寫
-    const inputUser = username.trim().toLowerCase();
-    const inputPass = password.trim();
+    // 防呆：轉小寫並去空格
+    const u = username.trim().toLowerCase();
+    const p = password.trim();
 
-    // 1. 優先判斷唯一管理者 chin / 520
-    if (inputUser === 'chin' && inputPass === '520') {
+    // 1. 唯一管理者 chin / 520
+    if (u === 'chin' && p === '520') {
       onLogin({
         id: 'admin-001',
         name: '管理員 chin',
@@ -33,10 +33,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLogin }) => {
       return;
     }
 
-    // 2. 比對一般帳號
-    const user = users.find(u => 
-      u.username.toLowerCase() === inputUser && u.password === inputPass
-    );
+    // 2. 一般帳號比對
+    const user = users.find(userObj => userObj.username === u && userObj.password === p);
     
     if (user) {
       onLogin(user);
@@ -45,65 +43,35 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLogin }) => {
     }
   };
 
-
   return (
-    <div className="h-screen w-screen bg-[#fffef9] flex items-center justify-center p-4 md:p-8 relative overflow-hidden fixed inset-0 z-[100]">
-      {/* 質感背景光暈 */}
-      <div className="fixed top-[-15%] left-[-10%] w-[50%] h-[50%] bg-brand-yellow/30 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
-      <div className="fixed bottom-[-15%] right-[-10%] w-[50%] h-[50%] bg-brand-orange/20 rounded-full blur-[120px] pointer-events-none"></div>
-
-      <div className="w-full max-w-xl bg-white/80 backdrop-blur-2xl rounded-[4rem] shadow-[0_40px_100px_-20px_rgba(255,184,95,0.2)] border-2 border-white/60 overflow-hidden relative z-10 flex flex-col">
-        
-        {/* 標題與 Logo 區域 */}
-        <div className="pt-12 pb-8 text-center bg-white/40">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-[2.5rem] mb-8 shadow-xl shadow-brand-orange/10 border border-brand-yellow/20">
-            <JialeLogo className="w-16 h-16" />
-          </div>
-          <h1 className="text-5xl font-black text-stone-800 tracking-tighter leading-none mb-4">佳樂身心診所</h1>
-          <p className="text-brand-orange font-black uppercase text-xs tracking-[0.5em]">Internal Management System</p>
+    <div className="h-screen w-screen bg-[#fffef9] flex items-center justify-center p-4 fixed inset-0 z-[100]">
+      <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand-yellow/20 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-xl rounded-[3rem] shadow-2xl p-10 border-2 border-stone-50 relative z-10">
+        <div className="text-center mb-10">
+          <JialeLogo className="w-16 h-16 mx-auto mb-4" />
+          <h1 className="text-3xl font-black text-stone-800 tracking-tighter">佳樂身心診所</h1>
+          <p className="text-brand-orange font-bold text-[10px] tracking-[0.3em] uppercase mt-2">Management Platform</p>
         </div>
-
-        {/* 登入表單：僅保留帳號與密碼輸入框 */}
-        <form onSubmit={handleSubmit} className="p-10 md:p-14 space-y-8">
-          <div className="space-y-3">
-            <label className="block text-xs font-black text-brand-olive uppercase tracking-[0.2em] ml-2">帳號 Username</label>
-            <input 
-              type="text" 
-              required 
-              autoFocus
-              className="w-full rounded-[1.8rem] border-stone-100 border-2 p-5 focus:ring-4 focus:ring-brand-yellow/30 focus:border-brand-orange outline-none transition-all font-bold bg-white text-xl shadow-inner" 
-              placeholder="請輸入帳號" 
-              value={username} 
-              onChange={e => setUsername(e.target.value)} 
-            />
-          </div>
-          
-          <div className="space-y-3">
-            <label className="block text-xs font-black text-brand-olive uppercase tracking-[0.2em] ml-2">密碼 Password</label>
-            <input 
-              type="password" 
-              required 
-              className="w-full rounded-[1.8rem] border-stone-100 border-2 p-5 focus:ring-4 focus:ring-brand-yellow/30 focus:border-brand-orange outline-none transition-all font-bold bg-white text-xl shadow-inner" 
-              placeholder="請輸入密碼" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-            />
-          </div>
-
-          {error && (
-            <div className="p-4 bg-red-50 text-red-500 text-lg rounded-[1.5rem] text-center font-bold border-2 border-red-100/50">
-              {error}
-            </div>
-          )}
-
-          <Button type="submit" size="xl" className="w-full rounded-[1.8rem] shadow-xl shadow-brand-orange/20 mt-4 transition-transform hover:scale-[1.02]">
-            進入管理系統
-          </Button>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <input 
+            type="text" 
+            required 
+            className="w-full h-14 px-6 rounded-2xl bg-stone-50 border-none font-black text-lg outline-none focus:ring-4 focus:ring-brand-yellow/30 transition-all" 
+            placeholder="帳號 Username" 
+            value={username} 
+            onChange={e => setUsername(e.target.value)} 
+          />
+          <input 
+            type="password" 
+            required 
+            className="w-full h-14 px-6 rounded-2xl bg-stone-50 border-none font-black text-lg outline-none focus:ring-4 focus:ring-brand-yellow/30 transition-all" 
+            placeholder="密碼 Password" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+          />
+          {error && <p className="text-red-500 text-center font-bold text-sm animate-bounce">{error}</p>}
+          <Button type="submit" size="xl" className="w-full rounded-2xl shadow-lg shadow-brand-orange/20 mt-4">進入系統</Button>
         </form>
-        
-        <div className="bg-stone-50/50 px-8 py-6 text-center text-[10px] text-stone-400 font-bold tracking-[0.3em] uppercase border-t border-stone-50">
-           🔒 安全加密連線 • 診所內部專用
-        </div>
       </div>
     </div>
   );
