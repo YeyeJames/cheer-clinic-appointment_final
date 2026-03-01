@@ -1299,6 +1299,7 @@
         const [logs, setLogs] = useState(DataService.get('jiale_logs', []));
 
         const socketRef = useRef(null);
+        const isRemoteUpdate = useRef(false);
 
         // Helper to add logs
         const addLog = useCallback((action, detail) => {
@@ -1314,42 +1315,60 @@
 
         // Background Sync Logic
         useEffect(() => {
-          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-          const socket = new WebSocket(`${protocol}//${window.location.host}`);
-          socketRef.current = socket;
+          let reconnectTimeout;
+          const connect = () => {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socket = new WebSocket(`${protocol}//${window.location.host}`);
+            socketRef.current = socket;
+            setSyncStatus('connecting');
 
-          socket.onopen = () => {
-            console.log('Sync connected');
-            setSyncStatus('synced');
-          };
+            socket.onopen = () => {
+              console.log('Sync connected');
+              setSyncStatus('synced');
+            };
 
-          socket.onmessage = (event) => {
-            try {
-              const payload = JSON.parse(event.data);
-              if (payload.type === 'INIT' || payload.type === 'SYNC') {
-                const { appointments: remoteApts, therapists: remoteTherapists, treatments: remoteTreatments, logs: remoteLogs, frontdesks: remoteFrontdesks } = payload.data;
-                if (remoteApts) setAppointments(remoteApts);
-                if (remoteTherapists) setTherapists(remoteTherapists);
-                if (remoteTreatments) setTreatments(remoteTreatments);
-                if (remoteLogs) setLogs(remoteLogs);
-                if (remoteFrontdesks) setFrontdesks(remoteFrontdesks);
-                setSyncStatus('synced');
+            socket.onmessage = (event) => {
+              try {
+                const payload = JSON.parse(event.data);
+                if (payload.type === 'INIT' || payload.type === 'SYNC') {
+                  const { appointments: remoteApts, therapists: remoteTherapists, treatments: remoteTreatments, logs: remoteLogs, frontdesks: remoteFrontdesks } = payload.data;
+                  
+                  // Mark as remote update to prevent loop
+                  isRemoteUpdate.current = true;
+                  
+                  if (remoteApts) setAppointments(remoteApts);
+                  if (remoteTherapists) setTherapists(remoteTherapists);
+                  if (remoteTreatments) setTreatments(remoteTreatments);
+                  if (remoteLogs) setLogs(remoteLogs);
+                  if (remoteFrontdesks) setFrontdesks(remoteFrontdesks);
+                  
+                  setSyncStatus('synced');
+                  
+                  // Reset flag after state updates are processed
+                  setTimeout(() => { isRemoteUpdate.current = false; }, 100);
+                }
+              } catch (e) {
+                console.error('Sync error:', e);
               }
-            } catch (e) {
-              console.error('Sync error:', e);
-            }
+            };
+
+            socket.onclose = () => {
+              console.log('Sync disconnected, retrying in 3s...');
+              setSyncStatus('error');
+              reconnectTimeout = setTimeout(connect, 3000);
+            };
+
+            socket.onerror = (err) => {
+              console.error('WebSocket error:', err);
+              setSyncStatus('error');
+            };
           };
 
-          socket.onclose = () => {
-            console.log('Sync disconnected');
-            setSyncStatus('error');
+          connect();
+          return () => {
+            if (socketRef.current) socketRef.current.close();
+            clearTimeout(reconnectTimeout);
           };
-
-          socket.onerror = () => {
-            setSyncStatus('error');
-          };
-
-          return () => socket.close();
         }, []);
 
         // Push updates to cloud (Debounced)
@@ -1369,9 +1388,11 @@
           DataService.save(KEYS.FRONTDESKS, frontdesks);
           DataService.save('jiale_logs', logs);
           
-          // Only push if we have a connection
-          const timeout = setTimeout(() => pushToCloud(data), 500);
-          return () => clearTimeout(timeout);
+          // Only push if we have a connection AND it's a local change
+          if (!isRemoteUpdate.current) {
+            const timeout = setTimeout(() => pushToCloud(data), 500);
+            return () => clearTimeout(timeout);
+          }
         }, [appointments, therapists, treatments, logs, frontdesks, pushToCloud]);
 
         useEffect(() => { document.getElementById('loading').style.display = 'none'; }, []);
